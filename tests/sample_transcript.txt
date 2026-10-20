@@ -1,0 +1,21 @@
+Project Kickoff Meeting — May 19, 2026
+
+Attendees: Sarah (PM), John (Engineering Lead), Priya (Designer), Mike (QA)
+
+Sarah: Alright everyone, let's get started. John, can you give us a quick update on the backend setup?
+
+John: Sure. The API is mostly done, I just need to finish the authentication module. I'll have that wrapped up by Wednesday.
+
+Sarah: Perfect. Priya, what's the status on the design mockups?
+
+Priya: I finished the homepage and dashboard designs. I still need to complete the mobile screens. I'll send those to the team by end of day Thursday.
+
+Sarah: Great. Mike, once Priya sends the designs, can you start putting together the test cases?
+
+Mike: Absolutely. I'll have a full test plan ready by next Monday.
+
+Sarah: John, one more thing — can you set up the staging environment so Priya and Mike can start testing early next week?
+
+John: Yes, I'll get that done by Friday afternoon.
+
+Sarah: Wonderful. I'll send out a follow-up email to the client summarizing our timeline. Let's plan to reconvene next Wednesday at 2pm for a progress check.
