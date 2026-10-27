@@ -2,8 +2,9 @@ from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
+import os
 
-DATABASE_URL = "sqlite:///./meeting_summarizer.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./meeting_summarizer.db")
 
 engine = create_engine(
     DATABASE_URL,

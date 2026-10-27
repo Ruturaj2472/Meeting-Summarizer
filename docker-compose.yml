@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    image: meeting-summarizer
+    container_name: meeting-summarizer
+    ports:
+      - "8000:8000"
+    env_file:
+      - Backend/.env
+    environment:
+      DATABASE_URL: sqlite:////app/data/meeting_summarizer.db
+    volumes:
+      - meeting-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  meeting-data:

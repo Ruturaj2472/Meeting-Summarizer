@@ -11,11 +11,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install Python deps
-COPY backend/requirements.txt ./
+COPY Backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
-COPY backend/ ./
+COPY Backend/ ./
 
 # Copy built frontend into FastAPI static folder
 COPY --from=frontend-build /app/frontend/dist ./static
