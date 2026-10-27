@@ -10,6 +10,13 @@
 ![SQLite](https://img.shields.io/badge/SQLite-SQLAlchemy-003B57?logo=sqlite&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+> **Highlights**
+> - **4 specialised CrewAI agents:** Extractor, Summarizer, Email Drafter and Reminder Drafter, each with one job and a strict JSON output format
+> - **Models chosen per task:** GPT-4o for action-item extraction, where accuracy matters most; GPT-4o-mini for summaries and emails
+> - **Reliable LLM output:** JSON is parsed even with extra text around it, with a safe fallback, so a malformed reply never crashes the API
+> - **Full stack:** FastAPI + SQLAlchemy backend, React 19 + Tailwind frontend, with editing, reminders and report export
+> - **Ready to ship:** multi-stage Docker build, Docker Compose with a persistent database volume, and 23 offline pytest tests with mocked LLMs
+
 Paste or upload a meeting transcript. MeetingAI runs it through a pipeline of specialised **CrewAI agents** and returns:
 
 - a **structured summary** (overview, key points, decisions),
