@@ -1,26 +1,41 @@
 import os
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-BACKEND_DIR = Path(__file__).resolve().parent.parent / "Backend"
-sys.path.insert(0, str(BACKEND_DIR))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "Backend"))
+sys.path.insert(0, str(ROOT / "evals"))
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 os.environ.setdefault("DATABASE_URL", "sqlite://")
+os.environ.setdefault("CREWAI_DISABLE_TELEMETRY", "true")
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 
 
 @pytest.fixture
 def fake_crew(monkeypatch):
-    """Replace CrewAI in an agent module so kickoff() returns canned LLM output."""
-    def _install(module, output):
-        task_cls = MagicMock()
+    """Replace CrewAI's Crew so kickoff_async() returns a canned result instead of calling OpenAI.
+
+    `parsed` is what CrewAI would put in result.pydantic (None means validation failed).
+    """
+    from agents import base
+
+    def _install(parsed=None, prompt_tokens=0, completion_tokens=0):
+        result = SimpleNamespace(
+            pydantic=parsed,
+            token_usage=SimpleNamespace(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens),
+        )
         crew_cls = MagicMock()
-        crew_cls.return_value.kickoff.return_value = output
-        monkeypatch.setattr(module, "Agent", MagicMock())
-        monkeypatch.setattr(module, "Task", task_cls)
-        monkeypatch.setattr(module, "Crew", crew_cls)
-        return task_cls, crew_cls
+        crew_cls.return_value.kickoff_async = AsyncMock(return_value=result)
+        monkeypatch.setattr(base, "Crew", crew_cls)
+        return crew_cls
     return _install
+
+
+def crew_task(crew_cls):
+    """The Task object the agent handed to Crew(...)."""
+    return crew_cls.call_args.kwargs["tasks"][0]

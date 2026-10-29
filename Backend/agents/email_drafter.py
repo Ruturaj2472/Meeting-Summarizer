@@ -1,16 +1,18 @@
-from crewai import Agent, Task, Crew
-from dotenv import load_dotenv
-import json
-import re
+from crewai import Agent, Task
+from agents.base import AgentRun, kickoff, model_for
+from models.schemas import EmailDraft
 
-load_dotenv()
+async def run_email_drafter(action_items: list, summary: dict = None, model: str = None) -> AgentRun:
+    model = model or model_for("email_drafter")
 
-def run_email_drafter(action_items: list, summary: dict = None) -> dict:
     if not action_items:
-        return {
-            "subject": "Meeting Summary",
-            "body": "Please find the meeting summary below. No action items were identified."
-        }
+        return AgentRun(
+            data={
+                "subject": "Meeting Summary",
+                "body": "Please find the meeting summary below. No action items were identified."
+            },
+            model=model
+        )
 
     pending_items = [i for i in action_items if i.get("status", "pending") == "pending"]
     done_items = [i for i in action_items if i.get("status", "pending") == "done"]
@@ -32,13 +34,13 @@ def run_email_drafter(action_items: list, summary: dict = None) -> dict:
     drafter_agent = Agent(
         role="Executive Assistant",
         goal="Write clear, professional follow-up emails summarizing meeting outcomes and outstanding tasks",
-        backstory="""You are a highly skilled executive assistant known for writing 
-        concise, professional emails that busy professionals actually read. 
+        backstory="""You are a highly skilled executive assistant known for writing
+        concise, professional emails that busy professionals actually read.
         Your emails are friendly but direct, well structured, and always under 250 words.
         You never use markdown formatting like asterisks or bold — plain text only.""",
         verbose=False,
         allow_delegation=False,
-        llm="gpt-4o-mini"
+        llm=model
     )
 
     drafting_task = Task(
@@ -51,7 +53,7 @@ def run_email_drafter(action_items: list, summary: dict = None) -> dict:
 
     {f'Completed items:{chr(10)}{done_text}' if done_text else ''}
 
-    You MUST follow this exact structure and format:
+    You MUST follow this exact structure and format for the body:
 
     Hi team,
 
@@ -77,36 +79,14 @@ def run_email_drafter(action_items: list, summary: dict = None) -> dict:
     - Every pending item must appear on its own line starting with a dash
     - Do not group items under sub-headers
     - Do not skip any pending items
-    - Keep it under 250 words
-
-    You MUST respond with ONLY a valid JSON object:
-    {{
-        "subject": "your subject line here",
-        "body": "your full email body here with real newlines not slash n"
-    }}
-
-    Do not include any text outside the JSON.""",
-        expected_output="A valid JSON object with subject and body fields",
+    - Keep it under 250 words""",
+        expected_output="A subject line and a plain-text email body",
+        output_pydantic=EmailDraft,
         agent=drafter_agent
     )
 
-    crew = Crew(
-        agents=[drafter_agent],
-        tasks=[drafting_task],
-        verbose=False
-    )
-
-    result = crew.kickoff()
-    raw = str(result)
-
-    try:
-        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
-        if json_match:
-            return json.loads(json_match.group())
-    except json.JSONDecodeError:
-        pass
-
-    return {
+    fallback = {
         "subject": "Meeting Follow-up: Action Items",
         "body": f"Hi team,\n\nPlease find below the outstanding action items from our meeting:\n\n{pending_text}\n\nThanks"
     }
+    return await kickoff(drafter_agent, drafting_task, model, fallback)

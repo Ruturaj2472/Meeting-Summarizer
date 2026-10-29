@@ -1,3 +1,5 @@
+import asyncio
+import json
 from pathlib import Path
 
 import pytest
@@ -7,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import main
+from agents.base import AgentRun
 from db.database import Base, get_db
 
 SAMPLE_TRANSCRIPT = (Path(__file__).parent / "sample_transcript.txt").read_text(encoding="utf-8")
@@ -26,6 +29,10 @@ SUMMARY = {
     "decisions": "Reconvene next Wednesday at 2pm.",
 }
 EMAIL = {"subject": "Follow-up on Project Kickoff", "body": "Hi team,\n\n..."}
+
+
+def agent_run(data, model="gpt-4o-mini"):
+    return AgentRun(data=data, model=model, seconds=0.5, prompt_tokens=1000, completion_tokens=200)
 
 
 @pytest.fixture
@@ -50,16 +57,22 @@ def client(monkeypatch, calls):
         finally:
             db.close()
 
-    def fake_drafter(items, summary=None):
+    async def fake_extractor(transcript):
+        return agent_run(EXTRACTED, model="gpt-4o")
+
+    async def fake_summarizer(transcript):
+        return agent_run(SUMMARY)
+
+    async def fake_drafter(items, summary=None):
         calls["drafter"].append((items, summary))
-        return EMAIL
+        return agent_run(EMAIL)
 
-    def fake_reminder(assignee, action_items, meeting_title):
+    async def fake_reminder(assignee, action_items, meeting_title):
         calls["reminder"].append((assignee, action_items, meeting_title))
-        return {"subject": f"Reminder for {assignee}", "body": "..."}
+        return agent_run({"subject": f"Reminder for {assignee}", "body": "..."})
 
-    monkeypatch.setattr(main, "run_extractor", lambda transcript: EXTRACTED)
-    monkeypatch.setattr(main, "run_summarizer", lambda transcript: SUMMARY)
+    monkeypatch.setattr(main, "run_extractor", fake_extractor)
+    monkeypatch.setattr(main, "run_summarizer", fake_summarizer)
     monkeypatch.setattr(main, "run_email_drafter", fake_drafter)
     monkeypatch.setattr(main, "run_reminder_drafter", fake_reminder)
     main.app.dependency_overrides[get_db] = override_get_db
@@ -73,6 +86,10 @@ def process(client):
     res = client.post("/meetings/process", json={"transcript": SAMPLE_TRANSCRIPT})
     assert res.status_code == 200
     return res.json()
+
+
+def stream_events(res):
+    return [json.loads(line[len("data: "):]) for line in res.text.splitlines() if line.startswith("data: ")]
 
 
 def test_health(client):
@@ -94,12 +111,84 @@ def test_process_returns_and_saves_results(client, calls):
     assert data["email_draft"] == EMAIL
     assert [i["text"] for i in data["action_items"]] == [i["text"] for i in EXTRACTED["action_items"]]
     assert all(i["status"] == "pending" for i in data["action_items"])
-    assert calls["drafter"][0][1] == SUMMARY
+    assert calls["drafter"][0] == (EXTRACTED["action_items"], SUMMARY)
 
     meetings = client.get("/meetings").json()
     assert len(meetings) == 1
     assert meetings[0]["summary"] == SUMMARY
     assert len(meetings[0]["action_items"]) == 4
+
+
+def test_process_reports_per_agent_metrics(client):
+    metrics = process(client)["metrics"]
+
+    assert set(metrics["agents"]) == {"extractor", "summarizer", "email_drafter"}
+    assert metrics["agents"]["extractor"]["model"] == "gpt-4o"
+    expected_cost = sum(a["cost_usd"] for a in metrics["agents"].values())
+    assert metrics["cost_usd"] == pytest.approx(expected_cost)
+    assert metrics["total_seconds"] >= 0
+
+
+def test_extractor_and_summarizer_run_in_parallel(client, monkeypatch):
+    summarizer_started = asyncio.Event()
+
+    async def extractor_waiting_for_summarizer(transcript):
+        # Only completes if the summarizer is running at the same time
+        await asyncio.wait_for(summarizer_started.wait(), timeout=2)
+        return agent_run(EXTRACTED, model="gpt-4o")
+
+    async def summarizer_signalling_start(transcript):
+        summarizer_started.set()
+        return agent_run(SUMMARY)
+
+    monkeypatch.setattr(main, "run_extractor", extractor_waiting_for_summarizer)
+    monkeypatch.setattr(main, "run_summarizer", summarizer_signalling_start)
+
+    assert process(client)["summary"] == SUMMARY
+
+
+def test_stream_reports_progress_then_result(client):
+    res = client.post("/meetings/process/stream", json={"transcript": SAMPLE_TRANSCRIPT})
+
+    assert res.headers["content-type"].startswith("text/event-stream")
+    events = stream_events(res)
+    progress = [(e["agent"], e["status"]) for e in events if e["type"] == "agent"]
+    assert set(progress[:2]) == {("extractor", "running"), ("summarizer", "running")}
+    assert set(progress[2:4]) == {("extractor", "done"), ("summarizer", "done")}
+    assert progress[4:] == [("email_drafter", "running"), ("email_drafter", "done")]
+    assert all("seconds" in e for e in events if e.get("status") == "done")
+    assert events[-1]["type"] == "result"
+    assert events[-1]["data"]["meeting"]["title"] == EXTRACTED["title"]
+
+
+def test_stream_rejects_short_transcript(client):
+    assert client.post("/meetings/process/stream", json={"transcript": "short"}).status_code == 400
+
+
+def test_agent_failure_returns_502_and_saves_nothing(client, monkeypatch):
+    async def failing_extractor(transcript):
+        raise RuntimeError("OpenAI is down")
+
+    monkeypatch.setattr(main, "run_extractor", failing_extractor)
+
+    res = client.post("/meetings/process", json={"transcript": SAMPLE_TRANSCRIPT})
+
+    assert res.status_code == 502
+    assert "extractor agent failed" in res.json()["detail"]
+    assert client.get("/meetings").json() == []
+
+
+def test_agent_failure_is_streamed_as_error_event(client, monkeypatch):
+    async def failing_drafter(items, summary=None):
+        raise TimeoutError()
+
+    monkeypatch.setattr(main, "run_email_drafter", failing_drafter)
+
+    res = client.post("/meetings/process/stream", json={"transcript": SAMPLE_TRANSCRIPT})
+
+    events = stream_events(res)
+    assert events[-1] == {"type": "error", "detail": "The email drafter agent failed: TimeoutError"}
+    assert client.get("/meetings").json() == []
 
 
 def test_update_action_item_status_and_text(client):
@@ -157,9 +246,8 @@ def test_remind_single_assignee_is_case_insensitive(client, calls):
 
     res = client.post(f"/meetings/{meeting_id}/remind/john")
 
-    assert res.status_code == 200
+    assert res.json() == {"subject": "Reminder for john", "body": "..."}
     assignee, items, title = calls["reminder"][0]
-    assert assignee == "john"
     assert [i["text"] for i in items] == [
         "Finish the authentication module", "Set up the staging environment"
     ]

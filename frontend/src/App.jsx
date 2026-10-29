@@ -6,6 +6,7 @@ import MeetingHistory from './components/MeetingHistory'
 import SummaryCard from './components/SummaryCard'
 import Toast from './components/Toast'
 import ProcessingScreen from './components/ProcessingScreen'
+import { readEventStream } from './lib/eventStream'
 
 const TABS = ['Summary', 'Action Items', 'Follow-up Draft']
 
@@ -21,6 +22,8 @@ function App() {
   const [typedTitle, setTypedTitle] = useState('')
   const [titleDone, setTitleDone] = useState(false)
   const [remindAllState, setRemindAllState] = useState('idle')
+  const [agentProgress, setAgentProgress] = useState({})
+  const [metrics, setMetrics] = useState(null)
 
   useEffect(() => { fetchMeetings() }, [])
 
@@ -57,9 +60,11 @@ function App() {
 }
 
   const handleTranscriptSubmit = async (transcript) => {
+    setAgentProgress({})
+    setMetrics(null)
     setAppState('loading')
     try {
-      const res = await fetch('/meetings/process', {
+      const res = await fetch('/meetings/process/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transcript })
@@ -68,11 +73,16 @@ function App() {
         const err = await res.json()
         throw new Error(err.detail)
       }
-      const data = await res.json()
+      const data = await readEventStream(res, (event) => {
+        if (event.type === 'agent') {
+          setAgentProgress(prev => ({ ...prev, [event.agent]: event }))
+        }
+      })
       setMeetingData(data.meeting)
       setActionItems(data.action_items)
       setEmailDraft(data.email_draft)
       setSummary(data.summary)
+      setMetrics(data.metrics)
       setAppState('done')
       fetchMeetings()
       showToast('Meeting analysed successfully')
@@ -147,6 +157,7 @@ function App() {
     setActionItems(meeting.action_items)
     setEmailDraft(null)
     setSummary(meeting.summary || null)
+    setMetrics(null)
     setAppState('done')
     setActiveTab('Summary')
     setRemindAllState('idle')
@@ -323,6 +334,11 @@ function App() {
                         weekday: 'long', month: 'long', day: 'numeric'
                       })
                     : ''}
+                  {metrics && (
+                    <span className="ml-2 text-slate-300">
+                      · Processed in {metrics.total_seconds.toFixed(1)}s · ~${metrics.cost_usd.toFixed(4)}
+                    </span>
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -377,7 +393,7 @@ function App() {
             </div>
           )}
 
-          {appState === 'loading' && <ProcessingScreen />}
+          {appState === 'loading' && <ProcessingScreen progress={agentProgress} />}
 
           {appState === 'done' && (
             <div className="max-w-2xl mx-auto p-6">

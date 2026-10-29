@@ -2,50 +2,44 @@ import { useState, useEffect } from 'react'
 
 const STEPS = [
   {
-    id: 1,
+    id: 'extractor',
+    number: 1,
     name: 'Extractor agent',
     desc: 'Finding all action items...',
     doneDesc: 'Action items extracted',
-    duration: 4000,
+    parallel: true,
   },
   {
-    id: 2,
+    id: 'summarizer',
+    number: 2,
     name: 'Summarizer agent',
     desc: 'Writing meeting summary...',
     doneDesc: 'Summary complete',
-    duration: 3500,
+    parallel: true,
   },
   {
-    id: 3,
+    id: 'email_drafter',
+    number: 3,
     name: 'Email drafter agent',
     desc: 'Drafting follow-up email...',
     doneDesc: 'Email drafted',
-    duration: 3000,
+    parallel: false,
   },
 ]
 
-function ProcessingScreen() {
-  const [activeStep, setActiveStep] = useState(1)
-  const [doneSteps, setDoneSteps] = useState([])
+// progress maps an agent id to the latest event streamed by the backend,
+// e.g. { extractor: { status: 'done', seconds: 3.1 }, summarizer: { status: 'running' } }
+function ProcessingScreen({ progress = {} }) {
+  const [elapsed, setElapsed] = useState(0)
 
   useEffect(() => {
-    let stepIndex = 0
-    const runStep = () => {
-      if (stepIndex >= STEPS.length) return
-      const step = STEPS[stepIndex]
-      setActiveStep(step.id)
-      const timer = setTimeout(() => {
-        setDoneSteps(prev => [...prev, step.id])
-        stepIndex++
-        if (stepIndex < STEPS.length) runStep()
-      }, step.duration)
-      return timer
-    }
-    const t = runStep()
-    return () => clearTimeout(t)
+    const start = Date.now()
+    const interval = setInterval(() => setElapsed((Date.now() - start) / 1000), 100)
+    return () => clearInterval(interval)
   }, [])
 
-  const progress = Math.round((doneSteps.length / STEPS.length) * 100)
+  const doneCount = STEPS.filter(step => progress[step.id]?.status === 'done').length
+  const percent = Math.round((doneCount / STEPS.length) * 100)
 
   return (
     <div className="h-full flex items-center justify-center bg-slate-950 p-8">
@@ -70,8 +64,9 @@ function ProcessingScreen() {
 
         <div className="w-full flex flex-col gap-3">
           {STEPS.map(step => {
-            const isDone = doneSteps.includes(step.id)
-            const isActive = activeStep === step.id && !isDone
+            const status = progress[step.id]?.status
+            const isDone = status === 'done'
+            const isActive = status === 'running'
 
             return (
               <div
@@ -91,20 +86,32 @@ function ProcessingScreen() {
                     ? 'bg-indigo-600 text-white animate-pulse-soft'
                     : 'bg-slate-700 text-slate-500'
                 }`}>
-                  {isDone ? '✓' : step.id}
+                  {isDone ? '✓' : step.number}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${
-                    isDone ? 'text-slate-400' : isActive ? 'text-slate-100' : 'text-slate-600'
-                  }`}>
-                    {step.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm font-medium ${
+                      isDone ? 'text-slate-400' : isActive ? 'text-slate-100' : 'text-slate-600'
+                    }`}>
+                      {step.name}
+                    </p>
+                    {step.parallel && (
+                      <span className="text-[10px] uppercase tracking-wide text-slate-500 border border-slate-700 rounded px-1">
+                        parallel
+                      </span>
+                    )}
+                  </div>
                   <p className={`text-xs mt-0.5 ${
                     isDone ? 'text-green-500' : isActive ? 'text-indigo-400' : 'text-slate-600'
                   }`}>
                     {isDone ? step.doneDesc : isActive ? step.desc : 'Waiting...'}
                   </p>
                 </div>
+                {isDone && progress[step.id]?.seconds != null && (
+                  <span className="text-xs text-slate-500 flex-shrink-0">
+                    {progress[step.id].seconds.toFixed(1)}s
+                  </span>
+                )}
               </div>
             )
           })}
@@ -112,13 +119,13 @@ function ProcessingScreen() {
 
         <div className="w-full">
           <div className="flex justify-between text-xs text-slate-500 mb-2">
-            <span>Step {Math.min(doneSteps.length + 1, STEPS.length)} of {STEPS.length}</span>
-            <span>{progress}%</span>
+            <span>{doneCount} of {STEPS.length} agents done · {elapsed.toFixed(1)}s</span>
+            <span>{percent}%</span>
           </div>
           <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-indigo-500 rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${percent}%` }}
             />
           </div>
         </div>

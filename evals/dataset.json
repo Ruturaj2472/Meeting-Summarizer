@@ -1,0 +1,195 @@
+[
+  {
+    "id": "sprint_planning",
+    "transcript": [
+      "Sprint Planning — Attendees: Alex (Engineering Manager), Dana (Backend), Leo (Frontend), Kim (QA)",
+      "Alex: Let's go through the sprint. Dana, where are we on the payments service?",
+      "Dana: It still uses the old cron jobs. I'll migrate the payments service to the new message queue by Thursday.",
+      "Alex: Great. Leo, the checkout button bug?",
+      "Leo: It only happens on Safari. I'll fix the Safari checkout bug this week.",
+      "Kim: Once Leo's fix is in, I'll write regression tests for the checkout flow.",
+      "Dana: Should we also rewrite the auth service in Go while we're at it?",
+      "Alex: No, not this quarter. Too risky.",
+      "Alex: The analytics dashboard won't fit in this sprint. I'll talk to product about moving the analytics dashboard to next sprint.",
+      "Alex: Okay, that's everything. Thanks all."
+    ],
+    "action_items": [
+      {"text": "Migrate the payments service to the new message queue by Thursday", "assignee": "Dana", "keywords": ["queue"]},
+      {"text": "Fix the Safari checkout bug", "assignee": "Leo", "keywords": ["safari"]},
+      {"text": "Write regression tests for the checkout flow", "assignee": "Kim", "keywords": ["regression"]},
+      {"text": "Talk to product about moving the analytics dashboard to next sprint", "assignee": "Alex", "keywords": ["analytics"]}
+    ]
+  },
+  {
+    "id": "marketing_launch",
+    "transcript": [
+      "Product Launch Sync — Attendees: Maya (Marketing Lead), Raj (Designer), Chen (Content Writer), Olivia (Social Media)",
+      "Maya: Launch is in two weeks. Raj, how are the visuals?",
+      "Raj: Almost there. I'll have the final banner designs ready by Monday.",
+      "Maya: Chen, can you draft the launch blog post?",
+      "Chen: Sure, I'll send a first draft of the blog post by Wednesday.",
+      "Olivia: I'll schedule all the social media posts for launch week once Raj's banners are done.",
+      "Maya: I still need finance to approve the ad spend, so I'll get budget approval from finance this week.",
+      "Chen: We also need a photographer for the launch event.",
+      "Maya: True, someone needs to book a photographer. Let's figure out who later.",
+      "Maya: Good meeting, everyone."
+    ],
+    "action_items": [
+      {"text": "Have the final banner designs ready by Monday", "assignee": "Raj", "keywords": ["banner"]},
+      {"text": "Send a first draft of the launch blog post by Wednesday", "assignee": "Chen", "keywords": ["blog"]},
+      {"text": "Schedule the social media posts for launch week", "assignee": "Olivia", "keywords": ["social"]},
+      {"text": "Get budget approval from finance", "assignee": "Maya", "keywords": ["budget"]},
+      {"text": "Book a photographer for the launch event", "assignee": null, "keywords": ["photographer"]}
+    ]
+  },
+  {
+    "id": "customer_escalation",
+    "transcript": [
+      "Customer Escalation: Acme Corp — Attendees: Priya (Support Manager), Tom (Engineer), Grace (Account Manager)",
+      "Priya: Acme Corp was charged twice for September. They're upset.",
+      "Tom: It's the invoicing job. It ran twice after the deploy. I'll investigate the duplicate invoice bug today.",
+      "Grace: I'll call Acme Corp this afternoon to apologise and explain what happened.",
+      "Priya: Should we refund the whole year as goodwill?",
+      "Grace: No, that's too much. A one-month credit is fair.",
+      "Priya: Agreed. I'll issue a one-month credit to their account.",
+      "Tom: I'll also add a monitoring alert so we notice if the invoice job runs twice again.",
+      "Priya: Thanks, let's regroup Friday."
+    ],
+    "action_items": [
+      {"text": "Investigate the duplicate invoice bug", "assignee": "Tom", "keywords": ["duplicate"]},
+      {"text": "Call Acme Corp to apologise and explain what happened", "assignee": "Grace", "keywords": ["acme"]},
+      {"text": "Issue a one-month credit to Acme's account", "assignee": "Priya", "keywords": ["credit"]},
+      {"text": "Add a monitoring alert for the invoice job running twice", "assignee": "Tom", "keywords": ["alert"]}
+    ]
+  },
+  {
+    "id": "hiring_sync",
+    "transcript": [
+      "Weekly Hiring Sync — Attendees: Nina (Recruiter), Sam (Hiring Manager), Ben (Senior Engineer)",
+      "Nina: Jordan accepted verbally for the backend role. I'll send Jordan the offer letter tomorrow.",
+      "Sam: Great news. We also need to open the senior data engineer role. I'll write the job description for it.",
+      "Nina: Maria passed the phone screen. I'll schedule an onsite interview for Maria next week.",
+      "Sam: Ben, we're still waiting on feedback for the two frontend candidates.",
+      "Ben: Sorry, I'll submit my interview feedback for both by Friday.",
+      "Sam: Should we use an external agency for the data role?",
+      "Nina: Let's hold off on that for now.",
+      "Sam: Okay, thanks everyone."
+    ],
+    "action_items": [
+      {"text": "Send Jordan the offer letter", "assignee": "Nina", "keywords": ["offer"]},
+      {"text": "Write the job description for the senior data engineer role", "assignee": "Sam", "keywords": ["description"]},
+      {"text": "Schedule an onsite interview for Maria", "assignee": "Nina", "keywords": ["onsite"]},
+      {"text": "Submit interview feedback for the two frontend candidates by Friday", "assignee": "Ben", "keywords": ["feedback"]}
+    ]
+  },
+  {
+    "id": "board_prep",
+    "transcript": [
+      "Board Meeting Prep — Attendees: Mark (CEO), Linda (CFO), Omar (Financial Analyst)",
+      "Mark: The board meets next Thursday. Where's the deck?",
+      "Linda: Mostly done, but the revenue numbers are stale.",
+      "Omar: I'll update the Q3 revenue forecast with the latest bookings.",
+      "Linda: I'll review the burn rate slide, it needs clearer runway assumptions.",
+      "Mark: The board will ask about churn.",
+      "Omar: I can pull the customer churn numbers for the last four quarters.",
+      "Mark: Perfect. Once it's final, I'll send the board deck to the directors by Tuesday.",
+      "Linda: Sounds good."
+    ],
+    "action_items": [
+      {"text": "Update the Q3 revenue forecast with the latest bookings", "assignee": "Omar", "keywords": ["forecast"]},
+      {"text": "Review the burn rate slide", "assignee": "Linda", "keywords": ["burn"]},
+      {"text": "Pull the customer churn numbers for the last four quarters", "assignee": "Omar", "keywords": ["churn"]},
+      {"text": "Send the board deck to the directors by Tuesday", "assignee": "Mark", "keywords": ["deck"]}
+    ]
+  },
+  {
+    "id": "design_review",
+    "transcript": [
+      "Mobile App Design Review — Attendees: Ivy (Design Lead), Max (Product Manager), Zoe (Mobile Engineer)",
+      "Ivy: Here are the new settings screens. The big change is the dark mode toggle.",
+      "Max: Users have asked for dark mode for months. Zoe, is it feasible this release?",
+      "Zoe: Probably. I'll check the feasibility of the dark mode toggle with our theming library and report back.",
+      "Max: What about the onboarding animation?",
+      "Ivy: Honestly, let's drop the onboarding animation. It slows people down.",
+      "Max: Agreed, it's dropped.",
+      "Ivy: Before we build anything, I'll run a usability test with five users.",
+      "Max: And I'll update the roadmap to reflect these changes.",
+      "Ivy: Great, thanks."
+    ],
+    "action_items": [
+      {"text": "Check the feasibility of the dark mode toggle", "assignee": "Zoe", "keywords": ["dark mode"]},
+      {"text": "Run a usability test with five users", "assignee": "Ivy", "keywords": ["usability"]},
+      {"text": "Update the roadmap to reflect the changes", "assignee": "Max", "keywords": ["roadmap"]}
+    ]
+  },
+  {
+    "id": "incident_postmortem",
+    "transcript": [
+      "Incident Postmortem: Checkout Outage — Attendees: Elena (Engineering Manager), Ravi (SRE), Hugo (Database Administrator)",
+      "Elena: Checkout was down for 40 minutes on Tuesday. What happened?",
+      "Ravi: The database connection pool was exhausted by a slow query on the orders table.",
+      "Hugo: The query was doing a full table scan. I'll add an index to the orders table on customer_id.",
+      "Ravi: I'll set up an alert on database connection pool usage so we catch this earlier.",
+      "Ravi: I'll also write up the postmortem document by Thursday.",
+      "Elena: Thanks. I'll share a summary of the incident with leadership.",
+      "Hugo: Our runbook didn't cover this case at all.",
+      "Elena: Right, someone should update the runbook. Let's not assign it yet.",
+      "Elena: Okay, thanks everyone."
+    ],
+    "action_items": [
+      {"text": "Add an index to the orders table on customer_id", "assignee": "Hugo", "keywords": ["index"]},
+      {"text": "Set up an alert on database connection pool usage", "assignee": "Ravi", "keywords": ["pool"]},
+      {"text": "Write the postmortem document by Thursday", "assignee": "Ravi", "keywords": ["postmortem"]},
+      {"text": "Share a summary of the incident with leadership", "assignee": "Elena", "keywords": ["leadership"]},
+      {"text": "Update the runbook", "assignee": null, "keywords": ["runbook"]}
+    ]
+  },
+  {
+    "id": "client_kickoff",
+    "transcript": [
+      "Client Kickoff: Data Platform Integration — Attendees: Aisha (Consultant), Ken (Client IT Lead), Lucy (Client Operations Manager)",
+      "Aisha: Thanks for having us. To start, we'll need access to your order database.",
+      "Ken: I can provide read-only database credentials by Wednesday.",
+      "Aisha: Perfect. Lucy, do you have documentation of how orders are processed today?",
+      "Lucy: Yes, I'll share last year's process documentation with you.",
+      "Aisha: Great. On our side, I'll send over the project plan by Friday.",
+      "Ken: Could you also set up a recurring check-in?",
+      "Aisha: Of course, I'll set up a weekly status call starting next week.",
+      "Lucy: Looking forward to it."
+    ],
+    "action_items": [
+      {"text": "Provide read-only database credentials by Wednesday", "assignee": "Ken", "keywords": ["credentials"]},
+      {"text": "Share last year's process documentation", "assignee": "Lucy", "keywords": ["documentation"]},
+      {"text": "Send over the project plan by Friday", "assignee": "Aisha", "keywords": ["plan"]},
+      {"text": "Set up a weekly status call", "assignee": "Aisha", "keywords": ["weekly"]}
+    ]
+  },
+  {
+    "id": "daily_standup",
+    "transcript": [
+      "Daily Standup — Attendees: Jo, Pat, Lee",
+      "Jo: Yesterday I finished the search endpoint. Today I'll finish the API documentation.",
+      "Pat: I'm blocked. The build keeps failing on my machine and I can't figure out why.",
+      "Lee: I've seen that before, it's the cache. I'll pair with Pat after standup to fix the build failure.",
+      "Pat: Thanks, that would help a lot.",
+      "Jo: That's it from me."
+    ],
+    "action_items": [
+      {"text": "Finish the API documentation", "assignee": "Jo", "keywords": ["documentation"]},
+      {"text": "Pair with Pat to fix the build failure", "assignee": "Lee", "keywords": ["build"]}
+    ]
+  },
+  {
+    "id": "all_hands_update",
+    "transcript": [
+      "Monthly All-Hands Update — Attendees: Carla (CEO), whole company",
+      "Carla: Welcome everyone. Quick update this month.",
+      "Carla: Revenue grew 12% over last month, and we signed three new enterprise customers.",
+      "Carla: We also moved into the new office, and the feedback has been very positive.",
+      "Carla: Engineering shipped the new reporting feature on schedule.",
+      "Carla: This was just an update, so there are no follow-ups needed from anyone.",
+      "Carla: Thanks for all your hard work, see you next month."
+    ],
+    "action_items": []
+  }
+]
